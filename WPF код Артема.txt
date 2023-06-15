@@ -1,0 +1,181 @@
+Строка подключения
+
+namespace SilosControl.Controller
+{
+    class DbConnection
+    {
+        public static Model.Entities2 s_firstDBEntities;
+
+        public static Model.Entities2 GetContext()
+        {
+            if (s_firstDBEntities == null)
+            {
+                s_firstDBEntities = new Model.Entities2();
+            }
+            return s_firstDBEntities;
+        }
+    }
+}
+
+
+Авторизация
+
+
+public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        public string strLoginUsers;
+        public string strPasswordUsers;
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+            Model.UchebProcessEntities dbCon = Controller.DbConnection.GetContext();
+            strPasswordUsers = TxtBoxPassword.Password;
+            strLoginUsers = TxtBoxLogin.Text;
+            TxtBoxLogin.ToolTip = null;
+            TxtBoxLogin.Background = Brushes.Transparent;
+            TxtBoxPassword.ToolTip = null;
+            TxtBoxPassword.Background = Brushes.Transparent;
+            
+
+
+            if (!string.IsNullOrEmpty(strLoginUsers) && !string.IsNullOrEmpty(strPasswordUsers))
+            {
+                if (!string.IsNullOrEmpty(strLoginUsers) && !string.IsNullOrEmpty(strPasswordUsers))
+                {
+                    var findUsersAccount = dbCon.Users.Where(x => x.Login == strLoginUsers && x.Password == strPasswordUsers).FirstOrDefault();
+                    if (findUsersAccount != null)
+                    {
+                        View.Windows.PrepodWindow taskWindow = new View.Windows.PrepodWindow();
+                        taskWindow.Show();
+                        this.Close();
+                        MessageBox.Show("Успешный вход");
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(strLoginUsers) && !string.IsNullOrEmpty(strPasswordUsers))
+                {
+                    var proverkalogin = dbCon.Users.Where(x => x.Login == strLoginUsers).FirstOrDefault();
+                    var proverkaPassword = dbCon.Users.Where(x => x.Password == strPasswordUsers).FirstOrDefault();
+                    if(proverkalogin == null)
+                    {
+                        TxtBoxLogin.ToolTip = "Неверный логин";
+                        TxtBoxLogin.Background = Brushes.Salmon;
+                        MessageBox.Show("Неверный логин");
+                    }
+                    if(proverkaPassword == null)
+                    {
+                        TxtBoxPassword.ToolTip = "Неверный пароль";
+                        TxtBoxPassword.Background = Brushes.Salmon;
+                        MessageBox.Show("Неверный пароль");
+                    }
+                    
+
+                }
+                
+            }
+            else
+            {
+                MessageBox.Show("Введите все данные");
+            }
+            
+        }
+
+
+Очистка
+
+ private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            TxtBoxLogin.Clear();
+            TxtBoxPassword.Clear();
+        }
+
+
+Вывод в грид
+
+DGrec.ItemsSource = Controller.DbConnection.GetContext().Prepodavateli.ToList();
+
+
+Поиск
+XML -----  TextChanged="Poisk_TextChanged"
+
+        private void UpdateSotr1()
+        {
+
+            var currentTours = Controller.DbConnection.GetContext().Prepodavateli.ToList();
+            currentTours = currentTours.Where(p => p.NamePrepod.ToLower().Contains(Poisk.Text.ToLower())).ToList();
+            DGrec.ItemsSource = currentTours.OrderBy(p => p.NamePrepod).ToList();
+        }
+
+        private void Poisk_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateSotr1();
+        }
+
+
+Удаление
+
+XML -----          <DataGrid Name="DGrec" Margin="0,0,0,92" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Название должности" Binding="{Binding NameDoljnosti}" Width="*"></DataGridTextColumn>
+                <DataGridTextColumn Header="Образование" Binding="{Binding Obrazovanie}" Width="*"></DataGridTextColumn>
+                <DataGridTextColumn Header="ФИО Преподователя" Binding="{Binding NamePrepod}" Width="*"></DataGridTextColumn>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button x:Name="btnDelete"  Background="#FF8C0A3E" BorderBrush="#FF8C0A3E" Height="32" Width="100" 
+                                    Click="btnDelete_Click"
+                                    Content="Удалить" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+Model.UchebProcessEntities objEntities = new Model.UchebProcessEntities(); - новая строка подключ
+
+ private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            DGrec.ItemsSource = objEntities.Prepodavateli.ToList();
+        }
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            int idPrepod = (DGrec.SelectedItem as Prepodavateli).IdPrepodavatela;
+            Prepodavateli prepod = (from r in objEntities.Prepodavateli where r.IdPrepodavatela == idPrepod select r).SingleOrDefault();
+            objEntities.Prepodavateli.Remove(prepod);
+            objEntities.SaveChanges();
+            DGrec.ItemsSource = objEntities.Prepodavateli.ToList();
+        }
+
+Добавление
+
+        Model.UchebProcessEntities db = Controller.DbConnection.GetContext();
+        Model.Prepodavateli Prepodavateli = new Model.Prepodavateli();
+        private void ButtonAdd_Click(object sender, RoutedEventArgs e)
+        {
+            Prepodavateli.NameDoljnosti = TxtDobavDoljnost.Text;
+            Prepodavateli.Obrazovanie = TxtDobavObrazovanie.Text;
+            Prepodavateli.NamePrepod = TxtDobavFIO.Text;
+            db.Prepodavateli.Add(Prepodavateli);
+            db.SaveChanges();
+        }
+
+
+XAML DataGrid
+
+<DataGrid Name="DGrec" Margin="0,0,0,92" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Название башни" Binding="{Binding NameSiloOUT}" Width="*"></DataGridTextColumn>
+                <DataGridTextColumn Header="Использованная масса муки" Binding="{Binding MassOUT}" Width="*"></DataGridTextColumn>
+                <DataGridTextColumn Header="Тип использованной муки" Binding="{Binding TypeOUT}" Width="*"></DataGridTextColumn>
+                <DataGridTextColumn Header="Дата использования" Binding="{Binding Date}" Width="*"></DataGridTextColumn>
+                <DataGridTextColumn Header="Цех" Binding="{Binding WorkLine}" Width="*"></DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+
+

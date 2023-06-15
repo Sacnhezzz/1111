@@ -1,0 +1,286 @@
+авторизация маинвиндов 
+grid
+
+ <Grid>
+        <Border  Background="Gray" VerticalAlignment="Top" Height="30"/>
+        <Button Content="Авториз" HorizontalAlignment="Center" Margin="0,361,0,0" Name="Avtoriz" VerticalAlignment="Top" Click="Avtoriz_Click" />
+        <TextBox HorizontalAlignment="Center" Margin="0,199,0,0" TextWrapping="Wrap" Text="" Name="Log" VerticalAlignment="Top" Width="120"/>
+        <TextBox HorizontalAlignment="Center" Margin="0,222,0,0" TextWrapping="Wrap" Text="" Name="Pas" VerticalAlignment="Top" Width="120"/>
+
+
+    </Grid>
+
+cs
+
+namespace WpfApp1
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        
+
+        private void Avtoriz_Click(object sender, RoutedEventArgs e)
+        {
+            Model1 db = Controller.DbConnection.GetContext();
+            var role = db.User.Where(x => x.UsrPas == Pas.Text && x.UsrLog == Log.Text).FirstOrDefault();
+            if (role != null)
+            {
+                switch (role.UserRole)
+                {
+                    case 1:
+                        WindowClient perexod = new WindowClient();
+                        perexod.Show();
+                        this.Close();
+                        break;
+                    case 2:
+                        WindowClient perexod = new WindowClient();
+                        perexod.Show();
+                        this.Close();
+                        break;
+                    case 3:
+                        WindowClient perexod = new WindowClient();
+                        perexod.Show();
+                        this.Close();
+                        break;
+                }
+            }
+            else 
+            { 
+            }
+
+        }
+    }
+}
+_____________________________________
+windowClient
+
+grid
+
+  <Grid>
+        <Border  Background="Gray" VerticalAlignment="Top" Height="30"/>
+        <TextBox HorizontalAlignment="Left" Margin="10,43,0,0" Name="PoiskTB" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" TextChanged="PoiskTB_TextChanged"/>
+        <ComboBox HorizontalAlignment="Left" Name="Sort" Margin="179,41,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="Sort_SelectionChanged">
+            <ComboBoxItem Content="Все" Tag="0"/>
+            <ComboBoxItem Content="По возраст" Tag="1"/>
+            <ComboBoxItem Content="По убыв" Tag="2"/>
+        </ComboBox>
+        <ComboBox HorizontalAlignment="Left" Name="Skidka" Margin="317,41,0,0" VerticalAlignment="Top" Width="120" SelectionChanged="Skidka_SelectionChanged" >
+            <ComboBoxItem Content="Все" Tag="0"/>
+            <ComboBoxItem Content="2 -3" Tag="1"/>
+            <ComboBoxItem Content="4-5" Tag="2"/>
+            <ComboBoxItem Content="5" Tag="3"/>
+        </ComboBox>
+        <Button Content="Добавить" Name="dobaw" HorizontalAlignment="Left" Margin="581,42,0,0" VerticalAlignment="Top" Width="67"/>
+        <Button Content="Удалить" Name="ydal" HorizontalAlignment="Left" Margin="653,42,0,0" VerticalAlignment="Top" Width="67" Click="ydal_Click"/>
+        <Button Content="Отредак" Name="otred" HorizontalAlignment="Left" Margin="509,42,0,0" VerticalAlignment="Top" Width="67" Click="otred_Click"/>
+        
+        
+        <ListView Name="LWProduct" Width="770" Height="300" VerticalAlignment="Center" Margin="0 75 0 0" d:ItemsSource="{d:SampleData ItemCount=1}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="Black" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="415"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Width="180" Height="100" Margin="5" Source="{Binding wqweqw}"/>
+
+                            <StackPanel Grid.Column="1" Margin="5">
+                                <TextBlock Text="{Binding perviy1}" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding perviy2}" />
+                                <TextBlock Text="{Binding perviy3}" />
+                                <TextBlock Text="{Binding perviy4}" />
+                            </StackPanel>
+
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding skidka ,StringFormat=размер скидки {0}%}"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+
+
+    </Grid>
+
+cs
+
+ public partial class WindowClient : Window
+    {
+        public int Utag;
+        public int Utag2;
+        public WindowClient()
+        {
+            InitializeComponent();
+            var product = Controller.DbConnection.GetContext().Product.ToList();
+            LWProduct.ItemsSource = product;
+            posle.Text = product.Count.ToString();
+
+        }
+
+        private void PoiskTB_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Poisk();
+        }
+        private void Poisk()
+        {
+            var prod = Controller.DbConnection.GetContext().Product.ToList();
+            prod = Controller.DbConnection.GetContext().Product.Where(x => x.ProductName.StartsWith(PoiskTB.Text)).ToList();
+            LWProduct.ItemsSource = prod.OrderBy(x => x.ProductName).ToList();
+            dot.Text = prod.Count.ToString();
+
+        }
+
+        private void Sort_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Utag = Convert.ToInt32(((ComboBoxItem)Sort.SelectedItem).Tag.ToString());
+            Sorti();
+        }
+
+        private void Sorti()
+        {
+            var sortl = Controller.DbConnection.GetContext().Product.ToList();
+            if (Utag == 1)
+                sortl = sortl.OrderBy(x => x.ProductName).ToList();
+            if (Utag == 2)
+                sortl = sortl.OrderByDescending(x => x.ProductName).ToList();
+
+            if (Utag2 == 1)
+                sortl = sortl.Where(x => x.ProductDisco >= 2 && x.ProductDisco < 4).ToList();
+            if (Utag2 == 2)
+                sortl = sortl.Where(x => x.ProductDisco >= 3 && x.ProductDisco < 5).ToList();
+            if (Utag2 == 3)
+                sortl = sortl.Where(x => x.ProductDisco >= 4).ToList();
+
+            LWProduct.ItemsSource = sortl;
+
+        }
+
+        private void Skidka_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Utag2 = Convert.ToInt32(((ComboBoxItem)Skidka.SelectedItem).Tag.ToString());
+            Sorti();
+        }
+
+        private void ydal_Click(object sender, RoutedEventArgs e)
+        {
+            if (LWProduct.SelectedItems.Count > 0)
+            {
+                Model.Product stroka = LW.SelectedItems[0] as Model.Product;
+                Controller.DbConnection.GetContext().Product.Remove(stroka);
+                Controller.DbConnection.GetContext().SaveChanges();
+            }
+            else
+            {
+                MessageBox.Show("Выбери продукт");
+            }
+
+        }
+
+        private void otred_Click(object sender, RoutedEventArgs e)
+        {
+            if (LWProduct.SelectedItems.Count > 0)
+            {
+                Model.Product Stroka = LW.SelectedItems[0] as Model.Product;
+
+                Windows.Redaktor perexod = new Windows.Redaktor(Stroka);
+                perexod.Show();
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("Выбери продукт");
+            }
+
+        }
+    }
+}
+_______________________________________
+redactor
+grid
+
+<Grid>
+        <TextBox HorizontalAlignment="Left" Margin="378,147,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120" Name="Cena"/>
+        <Button Content="Button" HorizontalAlignment="Left" Margin="612,329,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+
+    </Grid>
+
+cs
+
+namespace WpfApp1.Windows
+{
+    /// <summary>
+    /// Логика взаимодействия для Redaktor.xaml
+    /// </summary>
+    public partial class Redaktor : Window
+    {
+        private readonly Model1 save = Controller.DbConnection.GetContext();
+        Product Selekt;
+
+        public Redaktor()
+        {
+            InitializeComponent();
+            Selekt = Stroka;
+            Cena.Text = Stroka.ProductCost.ToString();
+
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Selekt.ProductCost = Convert.ToDecimal(Cena.Text);
+            save.SaveChangesAsync();
+
+        }
+
+        
+    }
+}
+_____________________________________________
+dobawlenie
+
+grid
+
+<Grid>
+        <TextBox HorizontalAlignment="Left" Margin="378,147,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120" Name="Cena"/>
+        <Button Content="Button" HorizontalAlignment="Left" Margin="612,329,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+    </Grid>
+
+cs
+namespace WpfApp1.Windows
+{
+    /// <summary>
+    /// Логика взаимодействия для Dobawlen.xaml
+    /// </summary>
+    public partial class Dobawlen : Window
+    {
+        public Dobawlen()
+        {
+            InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Model.Model1 model = new Model.Model1();
+            Model.Product prod = new Model.Product();
+
+            prod.ProductQuantityInStock = Convert.ToInt32(kolich.Text);
+
+            model.Product.Add(prod);
+            model.SaveChanges();
+
+        }
+    }
+}
+__________________________________________
+
+
+

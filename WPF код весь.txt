@@ -1,0 +1,759 @@
+В Model создаём ADO и подключаем базу
+В View добавляем окна
+В Controller добавляем класс(1ый) имя пишем DbConnections.cs и пишем код для подключения базы
+Включать Identity Specification
+internal class DbConnection
+    {
+
+        private static Model.practikaEntities3 s_firstDBEntities;
+
+        public static Model.practikaEntities3 GetContext()
+        {
+            if (s_firstDBEntities == null)
+            {
+                s_firstDBEntities = new Model.practikaEntities3();
+            }
+            return s_firstDBEntities;
+        }
+    }
+}
+_________________________________________
+Код на АВТОРИЗАЦИЮ
+
+XAML код
+
+ <Grid>
+        <TextBox x:Name="LoginBox" HorizontalAlignment="Left" Margin="422,166,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="PasswordBox" HorizontalAlignment="Left" Margin="422,251,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120" TextChanged="PasswordBox_TextChanged"/>
+        <Button Content="Button" HorizontalAlignment="Left" Margin="284,323,0,0" VerticalAlignment="Top" Click="Button_Click_1"/>
+
+    </Grid>
+
+VISUAL код
+
+public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+        private string strLoginUsers;
+        private string strPasswordUsers;
+
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            Model.practikaEntities dbCon = Controller.DbConnection.GetContext();
+            strPasswordUsers = PasswordBox.Text;
+            strLoginUsers = LoginBox.Text;
+
+            if (!string.IsNullOrEmpty(strLoginUsers) && !string.IsNullOrEmpty(strPasswordUsers))
+            {
+                var findUsersAccount = dbCon.Woditel(таблица).Where(x => x.Фамилия(столбец) == strLoginUsers && x.Имя(столбец) == strPasswordUsers).FirstOrDefault();
+                if (findUsersAccount != null)
+                {
+                    View.Window1 taskWindow = new View.Window1(); //переход на какое окно
+                    taskWindow.Show();
+                    this.Close();
+                }
+            }
+        }
+___________________________________________________________________________________________
+Код на Grid с таблицей, поиском, кнопкой с практики
+
+XAML код
+
+<Grid Margin="0,29,0,0">
+        <DataGrid x:Name="dgAwtobus"
+                  Width="1343"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="True"
+                  ColumnWidth="*" Height="420" Margin="0,59,0,0" (SelectionChanged="dgAwtobus_SelectionChanged"(если ошибка стереть))>
+            <DataGrid.Columns>
+                <DataGridTextColumn x:Name="idawt"
+                                   Binding="{Binding idAwtobus}"
+                                    Header="idAwtobus"
+                                    IsReadOnly="True"
+                                    Width="67"/>
+                <DataGridTextColumn x:Name="fModAwt"
+                                   Binding="{Binding МодельАвтобуса}"
+                                    Header="Модель автобуса"
+                                    IsReadOnly="True"
+                                    Width="106"/>
+                <DataGridTextColumn x:Name="DataWipuska"
+                                    Binding="{Binding ДатаВыпуска}"
+                                    Header="Дата Выпуска"
+                                    IsReadOnly="True" 
+                                    Width="86"/>
+                <DataGridTextColumn x:Name="GosNom"
+                                    Binding="{Binding ГосударственныйНомер }"
+                                    Header="Государственный номер"
+                                    IsReadOnly="True"
+                                    Width="150"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Меню" HorizontalAlignment="Left" Margin="1140,500,0,0" VerticalAlignment="Top" Height="40" Width="146" Click="Button_Click" FontSize="24" FontFamily="Consolas">
+            <Button.Effect>
+                <DropShadowEffect/>
+            </Button.Effect>
+        </Button>
+        
+        <Label Content="Автобусы" HorizontalAlignment="Center" Margin="0,-20,0,0" VerticalAlignment="Top" FontSize="48" FontFamily="Magneto"/>
+        <TextBox x:Name="TBoxSearch" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="132,506,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="274" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBlock HorizontalAlignment="Left" Margin="10,500,0,0" TextWrapping="Wrap" Text="Поиск" VerticalAlignment="Top" FontSize="36"/>
+    </Grid>
+
+VISUAL код
+
+public partial class Window3 : Window
+    {
+        public Window3()
+        {
+            InitializeComponent();
+            dgAwtobus.ItemsSource = Controller.DbConnection.GetContext().Awtobus.ToList();
+            UpdateAwtobus();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow emp = new MainWindow();
+            emp.Show();
+            this.Close();
+        }
+
+        private void dgAwtobus_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+        private void UpdateAwtobus()
+        {
+            var currentTours = Controller.DbConnection.GetContext().Awtobus.ToList();
+            currentTours = currentTours.Where(p => p.ГосударственныйНомер.ToLower().Contains(TBoxSearch.Text.ToLower())).ToList();
+            dgAwtobus.ItemsSource = currentTours.OrderBy(p => p.idAwtobus).ToList();
+        }
+        private void TBoxSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateAwtobus();
+        }
+    }
+}
+___________________________________________________________________________
+Код на таблицу с фреймом и 4 кнопками
+
+XAML код
+
+  Title="MainWindow" Height="458" Width="800" MinHeight="450" MinWidth="800" HorizontalAlignment="Center" VerticalAlignment="Center" WindowStartupLocation ="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="150" MaxWidth="300" Width="200"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3"
+                      HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+        <StackPanel Grid.Column ="0">
+            <Button Name="btnListUsers" Height="50" Width="150" Content="Пользователи" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,10,0,0" Click="btnListUsers_Click"></Button>
+            <Button x:Name="btnListChicken" Height="50" Width="150" Content="Птицы" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="25,10,25,0" Click="btnListUsers_Click"/>
+            <Button x:Name="btnListPorodi" Height="50" Width="150" Content="Породы" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="25,10,25,0" Click="btnListUsers_Click"/>
+            <Button x:Name="btnListEmployee" Height="50" Width="150" Content="Работники" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="25,10,25,0" Click="btnListUsers_Click"/>
+        </StackPanel>
+        <Frame x:Name="MainFrame" Grid.Column="3" BorderBrush="Black" BorderThickness="2" Margin="5,5,5,5"></Frame>
+______________________________________________________________________________
+Код для добавление в базу(столбец)
+
+
+XAML код
+
+<Grid>
+        <Button Content="Button" Name="Prin"  HorizontalAlignment="Left" Margin="219,230,0,0" VerticalAlignment="Top" Click="Prin_Click"/>
+        <TextBox Name="Zanesenie" HorizontalAlignment="Left" Margin="179,175,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+    </Grid>
+
+VISUAL код
+
+ public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+
+        }
+
+        private void Prin_Click(object sender, RoutedEventArgs e)
+        {
+            Model.practikaEntities practikaEntities = new Model.practikaEntities();
+            Model.Polomka polomka = new Model.Polomka();
+            polomka.Описание = Zanesenie.Text;
+            practikaEntities.Polomka.Add(polomka);
+            practikaEntities.SaveChanges();
+           
+
+        }
+    }
+}
+____________________________________________________
+Код для добавление в базу через техтбокс
+
+XAML код
+
+<Grid Margin="-2,90,2,0">
+        <DataGrid x:Name="dgWoditeli"
+                  Width="1343"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="True"
+                  ColumnWidth="*" Height="420" SelectionChanged="dgWoditeli_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn x:Name="idwod"
+                                    Binding="{Binding idWoditel}"
+                                    Header="idWoditel"
+                                    IsReadOnly="True" 
+                                    Width="70"/>
+                <DataGridTextColumn x:Name="idawt"
+                                   Binding="{Binding idAwtobus}"
+                                    Header="idAwtobus"
+                                    IsReadOnly="True"
+                                    Width="75"/>
+                <DataGridTextColumn x:Name="fam"
+                                   Binding="{Binding Фамилия}"
+                                    Header="Фамилия"
+                                    IsReadOnly="True"
+                                    Width="70"/>
+                <DataGridTextColumn x:Name="imia"
+                                    Binding="{Binding Имя}"
+                                    Header="Имя"
+                                    IsReadOnly="True" 
+                                    Width="70"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Меню" HorizontalAlignment="Left" Margin="1198,444,0,0" VerticalAlignment="Top" Height="40" Width="146" Click="Button_Click" FontSize="26" FontFamily="Consolas">
+            <Button.Effect>
+                <DropShadowEffect/>
+            </Button.Effect>
+        </Button>
+
+
+        <TextBox x:Name="TBoxSearch" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="132,444,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="274" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBlock HorizontalAlignment="Left" Margin="20,448,0,0" TextWrapping="Wrap" Text="Поиск" VerticalAlignment="Top" FontSize="36" FontFamily="Consolas"/>
+        <TextBox x:Name="TBoxSearch_Copy" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,528,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1" Height="35">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy1" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,584,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1" Height="34">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy2" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,646,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1" Height="36">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy3" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,712,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1" Height="36">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy4" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,777,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1" Height="35">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy5" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,528,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="28" Padding="0,0,0,0" Background="#FFF1F1F1" Height="35">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy6" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,584,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="28" Padding="0,0,0,0" Background="#FFF1F1F1" Height="34">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy7" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,646,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="28" Padding="0,0,0,0" Background="#FFF1F1F1" Height="36">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy8" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,712,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="28" Padding="0,0,0,0" Background="#FFF1F1F1" Height="36">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBox x:Name="TBoxSearch_Copy9" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="192,777,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="214" FontSize="28" Padding="0,0,0,0" Background="#FFF1F1F1" Height="35">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <Label Content="IdAwtobus" HorizontalAlignment="Left" Margin="31,524,0,0" VerticalAlignment="Top" FontFamily="Consolas" FontSize="28"/>
+        <Label Content="Фамилия" HorizontalAlignment="Left" Margin="31,580,0,0" VerticalAlignment="Top" FontFamily="Consolas" FontSize="28"/>
+        <Label Content="Имя" HorizontalAlignment="Left" Margin="31,643,0,0" VerticalAlignment="Top" FontFamily="Consolas" FontSize="28"/>
+        <Label Content="Отчество" HorizontalAlignment="Left" Margin="31,709,0,0" VerticalAlignment="Top" FontFamily="Consolas" FontSize="28"/>
+        <Label Content="Пол" HorizontalAlignment="Left" Margin="31,773,0,0" VerticalAlignment="Top" FontFamily="Consolas" FontSize="28"/>
+        <Button x:Name="buttonsave" Content="Сохранить" HorizontalAlignment="Left" Margin="1110,777,0,0" VerticalAlignment="Top" Height="40" Width="234" Click="Buttonsave" FontSize="26" FontFamily="Consolas" AutomationProperties.IsRowHeader="True">
+            <Button.Effect>
+                <DropShadowEffect/>
+            </Button.Effect>
+        </Button>
+        <Rectangle HorizontalAlignment="Left" Height="2" Margin="0,508,0,0" VerticalAlignment="Top" Width="1392" Fill="#FFC3C3C3"/>
+    </Grid>
+
+VISUAL код
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace practikaa.View
+{
+    
+    public partial class Window1 : Window
+    {
+        public Window1()
+        {
+            InitializeComponent();
+            dgWoditeli.ItemsSource = Controller.DbConnection.GetContext().Woditel.ToList(); //таблица для вывода в ДатаГрид данных ихз базы
+            UpdateWoditel();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+             MainWindow emp = new MainWindow();                           //при нажатии на кнопку переход на другое окно
+            emp.Show();
+            this.Close();
+
+        } 
+
+        private void UpdateWoditel()
+        {
+            var currentTours = Controller.DbConnection.GetContext().Woditel.ToList();
+            currentTours = currentTours.Where(p => p.Фамилия.ToLower().Contains(TBoxSearch.Text.ToLower())).ToList();  //поиск
+            dgWoditeli.ItemsSource = currentTours.OrderBy(p => p.idWoditel).ToList();
+        }
+
+        private void TBoxSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateWoditel();
+        }
+        
+        private void Buttonsave(object sender, RoutedEventArgs e)
+        {
+            Model.practikaEntities3 DB = new Model.practikaEntities3();
+            Model.Woditel Woditel = new Model.Woditel();
+            Woditel.idAwtobus = int.Parse(TBoxSearch_Copy5.Text);
+            Woditel.Фамилия = TBoxSearch_Copy6.Text;
+            Woditel.Имя = TBoxSearch_Copy7.Text;
+            Woditel.Отчество = TBoxSearch_Copy8.Text;
+            Woditel.Пол = TBoxSearch_Copy9.Text; 
+
+
+            DB.Woditel.Add(Woditel);
+            DB.SaveChanges();
+            MainWindow emp = new MainWindow();
+            emp.Show();
+            this.Close();
+        }
+    }
+}
+_________________________________________________
+Код на вывод и ввод из базы в TextBlock
+
+код XAML
+
+<Grid>
+        <Button Content="Button" Name="Prin"  HorizontalAlignment="Left" Margin="219,230,0,0" VerticalAlignment="Top" Click="Prin_Click"/>
+        <TextBox Name="Zanesenie" HorizontalAlignment="Left" Margin="179,175,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TextBlock Name="Vivod" HorizontalAlignment="Left" Margin="219,107,0,0" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Height="31" Width="406"/>
+    </Grid>
+
+код VISUAL
+
+ public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+            Sivod();
+        }
+
+        private void Prin_Click(object sender, RoutedEventArgs e)
+        {
+            Model.practikaEntities practikaEntities = new Model.practikaEntities();
+            Model.Polomka polomka = new Model.Polomka();
+            polomka.Описание = Zanesenie.Text;                                            //ввод в базу
+            practikaEntities.Polomka.Add(polomka);
+            practikaEntities.SaveChanges();
+           
+
+        }
+        private void Sivod()
+        {
+            Model.practikaEntities practikaEntities = new Model.practikaEntities();
+            var xui = practikaEntities.Polomka.Select(x => x.ТипПоломки);                       //вывод в textblock
+            string papa = xui.ToArray()[0].ToString();
+            Vivod.Text = papa;
+
+        }
+    }
+}
+_______________________________________________
+Решеный вариант с добалвением в базу через техтблоки
+
+XAML код
+
+<Grid>
+
+        <TextBox Name="Namespectacl" HorizontalAlignment="Left" Margin="188,3,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="159" Height="33" FontSize="17"/>
+        <Label Content="Название спектакля" HorizontalAlignment="Left" Margin="10,3,0,0" VerticalAlignment="Top" Height="33" Width="173" FontSize="17" FontFamily="Bahnschrift"/>
+        <TextBox Name="akter" HorizontalAlignment="Left" Margin="168,50,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="159" Height="33" FontSize="17"/>
+        <Label Content="Актёр" HorizontalAlignment="Left" Margin="10,50,0,0" VerticalAlignment="Top" Height="33" Width="158" FontSize="17" FontFamily="Bahnschrift"/>
+        <TextBox Name="rejiser" HorizontalAlignment="Left" Margin="168,98,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="159" Height="33" FontSize="17"/>
+        <Label Content="Режиссёр" HorizontalAlignment="Left" Margin="10,98,0,0" VerticalAlignment="Top" Height="33" Width="158" FontSize="17" FontFamily="Bahnschrift"/>
+        <TextBox Name="janr" HorizontalAlignment="Left" Margin="168,150,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="159" Height="33" FontSize="17"/>
+        <Label Content="Жанр" HorizontalAlignment="Left" Margin="10,150,0,0" VerticalAlignment="Top" Height="33" Width="158" FontSize="17" FontFamily="Bahnschrift"/>
+        <TextBox Name="countTicket" HorizontalAlignment="Left" Margin="168,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Width="159" Height="33" FontSize="17"/>
+        <Label Content="Цена Билета" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Height="33" Width="158" FontSize="17" FontFamily="Bahnschrift"/>
+        <TextBox Name="zal" HorizontalAlignment="Left" Margin="133,261,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="159" Height="33" FontSize="17"/>
+        <Label Content="Номер зала" HorizontalAlignment="Left" Margin="10,261,0,0" VerticalAlignment="Top" Height="33" Width="118" FontSize="17" FontFamily="Bahnschrift"/>
+        <TextBox Name="numberTickets" HorizontalAlignment="Left" Margin="188,316,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="159" Height="33" FontSize="17"/>
+        <Label Content="Количество билетов" HorizontalAlignment="Left" Margin="10,316,0,0" VerticalAlignment="Top" Height="33" Width="173" FontSize="17" FontFamily="Bahnschrift"/>
+        <Button Content="Добавить" HorizontalAlignment="Left" Margin="606,363,0,0" VerticalAlignment="Top" Height="37" Width="159" FontSize="17" FontFamily="Bahnschrift" Click="Button_Click"/>
+        <TextBox x:Name="Date" HorizontalAlignment="Left" Margin="108,363,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="208" Height="37"/>
+        <Label Content="Дата" HorizontalAlignment="Left" Margin="10,366,0,0" VerticalAlignment="Top" FontSize="17" FontFamily="Bahnschrift"/>
+
+    </Grid>
+
+VISUAL код
+
+namespace AfishaNSK
+{
+    
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Model.sessiaEntities sessiaEntities = new Model.sessiaEntities();
+            Model.Spectacl spectacl = new Model.Spectacl();
+            Model.Vistuplenie vistuplenie = new Model.Vistuplenie();
+            spectacl.Name = Namespectacl.Text;
+            spectacl.NameAkter = akter.Text;
+            spectacl.NameRedjiser = rejiser.Text;
+            spectacl.Janr = janr.Text;
+            vistuplenie.data = Convert.ToDateTime(Date.Text);
+            vistuplenie.PriceTickets = countTicket.Text;
+            vistuplenie.NumberZal = zal.Text;
+            vistuplenie.NumberTickets = numberTickets.Text;
+            sessiaEntities.Spectacl.Add(spectacl);
+            sessiaEntities.Vistuplenie.Add(vistuplenie);
+            sessiaEntities.SaveChanges();
+        }
+    }
+}
+__________________________________________________
+Код решеный 9 вариант
+
+XAML код
+
+<Grid Margin="0,29,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="243*"/>
+            <ColumnDefinition Width="557*"/>
+        </Grid.ColumnDefinitions>
+        <DataGrid x:Name="dgPrepod"
+                  Width="1344"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="True"
+                  ColumnWidth="*" Height="420" Margin="0,59,0,0" Grid.ColumnSpan="2">
+            <DataGrid.Columns>
+                <DataGridTextColumn x:Name="dolznost"
+                                   Binding="{Binding Dolznost}"
+                                    Header="Должность"
+                                    IsReadOnly="True"
+                                    Width="73"/>
+                <DataGridTextColumn x:Name="UrowenObraz"
+                                   Binding="{Binding UrowenObraz}"
+                                    Header="Уровень образования"
+                                    IsReadOnly="True"
+                                    Width="135"/>
+                <DataGridTextColumn x:Name="Name"
+                                    Binding="{Binding Name}"
+                                    Header="Имя преподавателя"
+                                    IsReadOnly="True" 
+                                    Width="120"/>
+                <DataGridTextColumn x:Name="Surname"
+                                    Binding="{Binding Surname}"
+                                    Header="Фамилия преподаателя"
+                                    IsReadOnly="True"
+                                    Width="150"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <TextBox x:Name="TBoxSearch" TextChanged="TBoxSearch_TextChanged" HorizontalAlignment="Left" Margin="132,506,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="274" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1" Grid.ColumnSpan="2">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBlock HorizontalAlignment="Left" Margin="10,500,0,0" TextWrapping="Wrap" Text="Поиск" VerticalAlignment="Top" FontSize="36"/>
+    </Grid>
+
+VISUAL код
+
+namespace WpfApp3
+{
+   
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+            dgPrepod.ItemsSource = Controller.DbConnection.GetContext().Prepod.ToList(); //подключение базы к таблице
+            poiskPrepod(); // вызываем метод который создали
+        }
+       private void poiskPrepod() // создаём  метод для поиска
+        {
+            var prepodi = Controller.DbConnection.GetContext().Prepod.ToList();  // подключаем нашу таблицу для поиска
+            prepodi = prepodi.Where(x => x.Surname.ToLower().Contains(TBoxSearch.Text.ToLower())).ToList(); // осуществляем поиск по столбцу Surname 
+            dgPrepod.ItemsSource = prepodi.OrderBy(x => x.Surname).ToList(); // Делаем фильтрацию по алфавиту
+        }
+
+        private void TBoxSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            poiskPrepod(); // вызываем метод который создали
+        }
+    }
+_______________________________________
+регистрация консольные приложения
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CreateAccountUsers
+{
+internal class CreateUser
+{
+static void Main(string[] args)
+{
+Console.Write("Создание новой учетной записи для пользователей\n");
+
+string name;
+string surname;
+string login;
+string password;
+
+Console.Write("Введите имя пользователя:");
+name = Console.ReadLine();
+Console.Write("Введите фамилию пользователя:");
+surname = Console.ReadLine();
+Console.Write("Введите логин:");
+login = Console.ReadLine();
+Console.Write("Введите пароль:");
+password = Console.ReadLine();
+
+string hashPassword = HashPasswords.HashPassw.GetHash(password);
+Console.WriteLine($"Хешированный пароль пользователя: { hashPassword}");
+Model.DB_StrahCompanyEntities dB_StrahCompanyEntities = new Model.DB_StrahCompanyEntities();
+Model.Users users = new Model.Users()
+{
+Login = login,
+Password = hashPassword,
+Name = name,
+Surname = surname
+};
+dB_StrahCompanyEntities.Users.Add(users);
+dB_StrahCompanyEntities.SaveChanges();
+Console.WriteLine("Пользователь успешно добавлен!");
+Console.Read();
+}
+}
+}
+______________________________________
+авторизация с всплывающими окнами
+
+XAML код
+
+  <Grid>
+        <TextBox x:Name="LoginBox" HorizontalAlignment="Left" Margin="290,136,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="233" Height="30" FontSize="17" FontFamily="Bahnschrift"/>
+        <Button Content="Войти" HorizontalAlignment="Left" Margin="201,292,0,0" VerticalAlignment="Top" Click="Button_Click_1" Height="36" Width="150" FontSize="17" FontFamily="Bahnschrift SemiBold"/>
+        <PasswordBox x:Name="PasswordBox" HorizontalAlignment="Left" Margin="290,0,0,0" VerticalAlignment="Center" Width="233" Height="30" FontSize="17" FontFamily="Bahnschrift"/>
+        <Label Content="Логин:" HorizontalAlignment="Left" Margin="191,136,0,0" VerticalAlignment="Top" FontFamily="Bahnschrift" FontSize="17"/>
+        <Label Content="Пароль:" HorizontalAlignment="Left" Margin="191,0,0,0" VerticalAlignment="Center" FontFamily="Bahnschrift" FontSize="17"/>
+        <Button x:Name="Clear" Content="Отмена" HorizontalAlignment="Left" Margin="429,290,0,0" VerticalAlignment="Top" Height="38" Width="149" FontFamily="Bahnschrift SemiBold" FontSize="17" Click="Clear_Click"/>
+    </Grid>
+
+VISUAL код
+
+  public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+        public string strLoginUsers;
+        public string strPasswordUsers;
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            Model.practikaEntities practikaEntities = Controller.DbConnection.GetContext();
+            strPasswordUsers = PasswordBox.Password;
+            strLoginUsers = LoginBox.Text;
+            if (!string.IsNullOrEmpty(strLoginUsers) && !string.IsNullOrEmpty(strPasswordUsers))
+            {
+                var findUsersAccount = practikaEntities.Woditel.Where(x => x.Имя == strLoginUsers && x.Фамилия == strPasswordUsers).FirstOrDefault();
+                if (findUsersAccount != null)
+                {
+                    View.Window1 taskWindow = new View.Window1();
+                    taskWindow.Show();
+                    this.Close();
+                    MessageBox.Show("Вход выполнен");
+                }
+                else
+                {
+                    var prlog = practikaEntities.Woditel.Where(x => x.Имя == strLoginUsers).FirstOrDefault();
+                    var prpass = practikaEntities.Woditel.Where(x => x.Фамилия == strPasswordUsers).FirstOrDefault();
+
+                    if (prlog == null)
+                    {
+                        MessageBox.Show("Неверный логин");
+                    }
+                    if (prpass == null)
+                    {
+                        MessageBox.Show("Неверный пароль");
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Введены не все данные");
+            }
+        }
+
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            LoginBox.Clear();
+            PasswordBox.Clear();
+        }
+    }
+}
+____________________________________________
+удаление строки
+
+XAML код
+
+<Grid Margin="0,29,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="243*"/>
+            <ColumnDefinition Width="557*"/>
+        </Grid.ColumnDefinitions>
+        <DataGrid x:Name="dgPrepod"
+                  Width="1344"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="True"
+                  ColumnWidth="*" Height="420" Margin="0,59,0,0" Grid.ColumnSpan="2">
+            <DataGrid.Columns>
+                <DataGridTextColumn x:Name="dolznost"
+                                   Binding="{Binding Dolznost}"
+                                    Header="Должность"
+                                    IsReadOnly="True"
+                                    Width="73"/>
+                <DataGridTextColumn x:Name="UrowenObraz"
+                                   Binding="{Binding UrowenObraz}"
+                                    Header="Уровень образования"
+                                    IsReadOnly="True"
+                                    Width="135"/>
+                <DataGridTextColumn x:Name="Name"
+                                    Binding="{Binding Name}"
+                                    Header="Имя преподавателя"
+                                    IsReadOnly="True" 
+                                    Width="120"/>
+                <DataGridTextColumn x:Name="Surname"
+                                    Binding="{Binding Surname}"
+                                    Header="Фамилия преподаателя"
+                                    IsReadOnly="True"
+                                    Width="150"/>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button x:Name="btnDelete"  Background="#FF8C0A3E" BorderBrush="#FF8C0A3E" Height="32" Width="180" 
+                                   Click="btnDelete_Click_1"
+                                    Content="Удалить" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+            
+        </DataGrid>
+        <TextBox x:Name="TBoxSearch"  HorizontalAlignment="Left" Margin="132,506,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="274" FontSize="36" Padding="0,0,0,0" Background="#FFF1F1F1" Grid.ColumnSpan="2">
+            <TextBox.Effect>
+                <DropShadowEffect/>
+            </TextBox.Effect>
+        </TextBox>
+        <TextBlock HorizontalAlignment="Left" Margin="10,500,0,0" TextWrapping="Wrap" Text="Поиск" VerticalAlignment="Top" FontSize="36"/>
+    </Grid>
+
+VISUAL код
+
+namespace WpfApp3
+{
+   
+    public partial class MainWindow : Window
+    {
+        Model.praktika9Entities objEntities = new Model.praktika9Entities();
+        public MainWindow()
+        {
+            InitializeComponent();
+            dgPrepod.ItemsSource = Controller.DbConnection.GetContext().Prepod.ToList(); //подключение базы к таблице
+           
+        }       
+     
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            dgPrepod.ItemsSource = objEntities.Prepod.ToList();
+        }
+
+        private void btnDelete_Click_1(object sender, RoutedEventArgs e)
+        {
+            long idPrepodi = (dgPrepod.SelectedItem as Prepod).idPrepod;
+            Prepod prepod = (from r in objEntities.Prepod where r.idPrepod == idPrepodi select r).SingleOrDefault();     //удаление
+            objEntities.Prepod.Remove(prepod);
+            objEntities.SaveChanges();
+            dgPrepod.ItemsSource = objEntities.Prepod.ToList();
+        }
+    }
+}
